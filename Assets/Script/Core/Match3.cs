@@ -25,10 +25,12 @@ public class Match3 : MonoBehaviour
     
     InputReader inputReader;
     AudioManager audioManager;
+    ScoreManager scoreManager;
 
     void Awake() {
         inputReader = GetComponent<InputReader>();
         audioManager = GetComponent<AudioManager>();
+        scoreManager = GetComponent<ScoreManager>();
     }
     void Start()
     {
@@ -61,9 +63,15 @@ public class Match3 : MonoBehaviour
         // Matches?
         List<Vector2Int> matches = FindMatches();
         // TODO: Calculate score
-        // var newScore = CalculateScore(matches);
+        scoreManager.UpdateScoreValue(matches.Count);
+        void UpdateScoreUIAction()
+        {
+            scoreManager.UpdateScoreUI();
+            scoreManager.AnimateScoreChange();
+        }
+
         // Make Gems explode
-        yield return StartCoroutine(ExplodeGems(matches));
+        yield return StartCoroutine(ExplodeGems(matches, UpdateScoreUIAction));
         // Make gems fall
         yield return StartCoroutine(MakeGemsFall());
         // Fill empty spots
@@ -112,7 +120,7 @@ public class Match3 : MonoBehaviour
         }
     }
     
-    IEnumerator ExplodeGems(List<Vector2Int> matches) {
+    IEnumerator ExplodeGems(List<Vector2Int> matches, Action callback) {
 
         foreach (var match in matches) {
             var gem = grid.GetValue(match.x, match.y).GetValue();
@@ -121,11 +129,12 @@ public class Match3 : MonoBehaviour
             ExplodeVFX(match);
                 
             gem.transform.DOPunchScale(Vector3.one * 0.1f, 0.1f, 1, 0.5f).onComplete = audioManager.PlayPop;
-                
+
             yield return new WaitForSeconds(0.1f);
             
             Destroy(gem.gameObject, 0.1f);
         }
+        callback?.Invoke();
     }
     
     void ExplodeVFX(Vector2Int match) {
@@ -220,12 +229,6 @@ public class Match3 : MonoBehaviour
         grid.SetValue(x, y, gridObject);
     }
 
-    int CalculateScore(List<Vector2Int> matches)
-    {
-        return matches.Count;
-        
-    }
-    
     void DeselectGem() => selectedGem = new Vector2Int(-1, -1);
     void SelectGem(Vector2Int gridPos) => selectedGem = gridPos;
     
