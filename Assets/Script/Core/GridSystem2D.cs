@@ -2,10 +2,10 @@ using System;
 using TMPro;
 using UnityEngine;
 
-public class GridSystem2D<T> : MonoBehaviour
+public class GridSystem2D<T>
 {
-    readonly int width;
-    readonly int height;
+    public readonly int width;
+    public readonly int height;
     readonly float cellSize;
     readonly Vector3 origin;
     readonly T[,] gridArray;

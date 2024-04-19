@@ -342,6 +342,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &679660245
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 679660247}
+  - component: {fileID: 679660246}
+  m_Layer: 0
+  m_Name: ConfigurationManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &679660246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 679660245}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb9df9de2ea64ab898376dd217a5c7a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &679660247
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 679660245}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 404.47272, y: 207.11179, z: -2.468362}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &886062911
 GameObject:
   m_ObjectHideFlags: 0
@@ -435,6 +479,7 @@ GameObject:
   - component: {fileID: 927295279}
   - component: {fileID: 927295280}
   - component: {fileID: 927295281}
+  - component: {fileID: 927295282}
   m_Layer: 0
   m_Name: Match3
   m_TagString: Untagged
@@ -454,17 +499,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3c68ebaf36b24e5b88b760dcb7bfffa4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 8
-  height: 8
+  currentState: 0
   cellSize: 1
   originPosition: {x: 0, y: 0, z: 0}
   debug: 0
   gemPrefab: {fileID: -176251783630205136, guid: 6a4e54f09210842ecbb5638d64543798, type: 3}
-  gemTypes:
-  - {fileID: 11400000, guid: 202354221d3104c83a44bb90fe6bcb28, type: 2}
-  - {fileID: 11400000, guid: e1ba3e15dc1c844398453cb7223727b0, type: 2}
-  - {fileID: 11400000, guid: b3221ab1c9a2a4263aa62914b22d1c2d, type: 2}
-  - {fileID: 11400000, guid: 648f8313230b743e58dd50d0cd85ebc5, type: 2}
   ease: 5
   explosion: {fileID: 8771972552311404799, guid: 5debb600eb81c486f8566cb2d6d87389, type: 3}
 --- !u!4 &927295276
@@ -707,6 +746,53 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _scoreText: {fileID: 2021872920}
+--- !u!114 &927295282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 927295274}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d344a4aff9a4906bbaabda5cab3ec57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levels:
+  - levelNumber: 0
+    scoreToAchieve: 20
+    boardWidth: 8
+    boardHeight: 8
+    timeLimit: 0
+    useSpecialGems: 0
+    availableGemTypes:
+    - {fileID: 11400000, guid: 202354221d3104c83a44bb90fe6bcb28, type: 2}
+    - {fileID: 11400000, guid: e1ba3e15dc1c844398453cb7223727b0, type: 2}
+    - {fileID: 11400000, guid: b3221ab1c9a2a4263aa62914b22d1c2d, type: 2}
+    - {fileID: 11400000, guid: 648f8313230b743e58dd50d0cd85ebc5, type: 2}
+  - levelNumber: 0
+    scoreToAchieve: 30
+    boardWidth: 8
+    boardHeight: 8
+    timeLimit: 0
+    useSpecialGems: 0
+    availableGemTypes:
+    - {fileID: 11400000, guid: 202354221d3104c83a44bb90fe6bcb28, type: 2}
+    - {fileID: 11400000, guid: e1ba3e15dc1c844398453cb7223727b0, type: 2}
+    - {fileID: 11400000, guid: b3221ab1c9a2a4263aa62914b22d1c2d, type: 2}
+    - {fileID: 11400000, guid: 648f8313230b743e58dd50d0cd85ebc5, type: 2}
+  - levelNumber: 0
+    scoreToAchieve: 40
+    boardWidth: 8
+    boardHeight: 8
+    timeLimit: 0
+    useSpecialGems: 0
+    availableGemTypes:
+    - {fileID: 11400000, guid: 202354221d3104c83a44bb90fe6bcb28, type: 2}
+    - {fileID: 11400000, guid: e1ba3e15dc1c844398453cb7223727b0, type: 2}
+    - {fileID: 11400000, guid: b3221ab1c9a2a4263aa62914b22d1c2d, type: 2}
+    - {fileID: 11400000, guid: 648f8313230b743e58dd50d0cd85ebc5, type: 2}
+  currentLevelIndex: 0
 --- !u!1 &1814174165
 GameObject:
   m_ObjectHideFlags: 0
@@ -952,3 +1038,4 @@ SceneRoots:
   - {fileID: 927295276}
   - {fileID: 1814174169}
   - {fileID: 886062914}
+  - {fileID: 679660247}

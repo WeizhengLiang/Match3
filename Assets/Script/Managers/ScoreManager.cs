@@ -7,7 +7,7 @@ using UnityEngine;
 public class ScoreManager : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _scoreText;
-    private int _currentScore;
+    public int CurrentScore { get; private set; }
 
     public void UpdateScore(int pointsToChange = 1)
     {
@@ -19,16 +19,21 @@ public class ScoreManager : MonoBehaviour
     // add score
     public void UpdateScoreValue(int pointsToChange)
     {
-        _currentScore += pointsToChange;
+        CurrentScore += pointsToChange;
     }
     // update score UI
     public void UpdateScoreUI()
     {
-        _scoreText.text = $"score: {_currentScore.ToString()}";
+        _scoreText.text = $"score: {CurrentScore.ToString()}/{ConfigurationManager.Instance.CurrentLevelConfig.scoreToAchieve}";
     }
     // animate UI changes
     public void AnimateScoreChange()
     {
         _scoreText.transform.DOPunchPosition(new Vector3(0, 10, 0), 0.5f);
+    }
+
+    public void ResetScore()
+    {
+        CurrentScore = 0;
     }
 }
