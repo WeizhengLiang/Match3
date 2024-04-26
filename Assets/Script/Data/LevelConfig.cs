@@ -1,3 +1,5 @@
+using Script.Core;
+
 namespace Script.Data
 {
     [System.Serializable]
@@ -10,6 +12,7 @@ namespace Script.Data
         public float timeLimit;
         public bool useSpecialGems;
         public GemType[] availableGemTypes;  // Assuming GemType is already defined somewhere
+        public SpecialGemType[] availableSpecialGemTypes;
     }
 
 }

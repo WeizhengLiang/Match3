@@ -760,7 +760,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levels:
   - levelNumber: 0
-    scoreToAchieve: 20
+    scoreToAchieve: 1000
     boardWidth: 8
     boardHeight: 8
     timeLimit: 0
@@ -770,6 +770,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: e1ba3e15dc1c844398453cb7223727b0, type: 2}
     - {fileID: 11400000, guid: b3221ab1c9a2a4263aa62914b22d1c2d, type: 2}
     - {fileID: 11400000, guid: 648f8313230b743e58dd50d0cd85ebc5, type: 2}
+    availableSpecialGemTypes: 00000000
   - levelNumber: 0
     scoreToAchieve: 30
     boardWidth: 8
@@ -781,6 +782,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: e1ba3e15dc1c844398453cb7223727b0, type: 2}
     - {fileID: 11400000, guid: b3221ab1c9a2a4263aa62914b22d1c2d, type: 2}
     - {fileID: 11400000, guid: 648f8313230b743e58dd50d0cd85ebc5, type: 2}
+    availableSpecialGemTypes: 00000000
   - levelNumber: 0
     scoreToAchieve: 40
     boardWidth: 8
@@ -792,6 +794,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: e1ba3e15dc1c844398453cb7223727b0, type: 2}
     - {fileID: 11400000, guid: b3221ab1c9a2a4263aa62914b22d1c2d, type: 2}
     - {fileID: 11400000, guid: 648f8313230b743e58dd50d0cd85ebc5, type: 2}
+    availableSpecialGemTypes: 00000000
   currentLevelIndex: 0
 --- !u!1 &1814174165
 GameObject:
