@@ -9,16 +9,26 @@ namespace Script.Core
         public Dictionary<SpecialGemType, int> SpecialEffects{ get; private set; }
         public int MatchCount => Positions.Count;
 
-        public Match(List<Vector2Int> positions, Dictionary<SpecialGemType, int> specialEffects)
+        public readonly int GemTypeBasePoint;
+
+        public Match(List<Vector2Int> positions, Dictionary<SpecialGemType, int> specialEffects, int gemTypeBasePoint)
         {
             Positions = positions;
             SpecialEffects = specialEffects;
+            GemTypeBasePoint = gemTypeBasePoint;
         }
         
-        public Match(List<Vector2Int> positions)
+
+        public Gem GetFirstGem()
         {
-            Positions = positions;
-            SpecialEffects = null;
+            if (Positions.Count == 0)
+            {
+                Debug.LogWarning("the match is empty");
+                return null;
+            }
+            var grid = Match3.Instance.grid;
+            var gridObject = grid.GetValue(Positions[0].x, Positions[0].y);
+            return gridObject.GetValue();
         }
         
     }

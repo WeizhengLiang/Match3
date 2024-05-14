@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using Script.Core;
-using Script.Data;
 using UnityEngine;
 using Match = Script.Core.Match;
 using Random = UnityEngine.Random;
@@ -12,6 +11,8 @@ public enum GameState
 {
     Idle,
     Swapping,
+    ReverseSwapping,
+    PreMatching,
     Matching,
     Falling,
     Filling,
@@ -29,7 +30,7 @@ public class Match3 : MonoBehaviour
     [SerializeField] Ease ease = Ease.InQuad;
     [SerializeField] GameObject explosion;
     
-    GridSystem2D<GridObject<Gem>> grid;
+    public GridSystem2D<GridObject<Gem>> grid;
     
     Vector2Int selectedGem = Vector2Int.one * -1;
     
@@ -37,12 +38,29 @@ public class Match3 : MonoBehaviour
     AudioManager audioManager;
     ScoreManager scoreManager;
     LevelManager levelManager;
+    GemGenerator gemGenerator;
+
+    private static Match3 instance;
+
+    public static Match3 Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = new Match3();
+            }
+
+            return instance;
+        }
+    }
     
     void Awake() {
         inputReader = GetComponent<InputReader>();
         audioManager = GetComponent<AudioManager>();
         scoreManager = GetComponent<ScoreManager>();
         levelManager = GetComponent<LevelManager>();
+        gemGenerator = GetComponent<GemGenerator>();
         inputReader.Fire += OnSelectGem;
     }
     void OnDestroy() {
@@ -56,7 +74,8 @@ public class Match3 : MonoBehaviour
             var isCompleted = levelManager.CheckCompletion();
             if (!isCompleted)
             {
-                SetState(GameState.Idle);
+                // SetState(GameState.Idle);
+                SetState(GameState.Matching);
             }
         }
         else
@@ -79,24 +98,33 @@ public class Match3 : MonoBehaviour
         } else if (selectedGem == Vector2Int.one * -1) {
             SelectGem(gridPos);
             audioManager.PlayClick();
-        } else {
-            //StartCoroutine(RunGameLoop(selectedGem, gridPos));
+        } else if (!IsAdjacentPosition(selectedGem, gridPos))
+        {
+            DeselectGem();
+            Debug.Log("You must select two adjacent gems to swap");
+        }else {
             SetState(GameState.Swapping, gridPos);
         }
     }
     
-    public void SetState(GameState newState, Vector2Int selectedPos = default)
+    public void SetState(GameState newState, Vector2Int selectedPos = default, List<Match> preMatchingList = null)
     {
         currentState = newState;
         switch (newState)
         {
             case GameState.Swapping:
                 // Debug.Log("enter swapping state");
-                SwapGems(selectedGem, selectedPos);
+                SwapGems(selectedGem, selectedPos, false);
+                break;
+            case GameState.ReverseSwapping:
+                SwapGems(selectedPos, selectedGem, true);
+                break;
+            case GameState.PreMatching:
+                StartPreMatching(selectedPos);
                 break;
             case GameState.Matching:
                 // Debug.Log("enter matching state");
-                StartCoroutine(StartMatching());
+                StartCoroutine(StartMatching(preMatchingList));
                 break;
             case GameState.Falling:
                 // Debug.Log("enter falling state");
@@ -116,46 +144,30 @@ public class Match3 : MonoBehaviour
                 break;
         }
     }
-    
-    // IEnumerator RunGameLoop(Vector2Int gridPosA, Vector2Int gridPosB)
-    // {
-    //     IsGameLoopRunning = true;
-    //     //yield return StartCoroutine(SwapGems(gridPosA, gridPosB));
-    //     
-    //     // Matches?
-    //     var matches = FindMatches();
-    //
-    //     if (matches.Count == 0)
-    //     {
-    //         CheckForPossibleCompletion(); 
-    //     }
-    //     else
-    //     {
-    //         scoreManager.UpdateScoreValue(matches.Count);
-    //         void UpdateScoreUIAction()
-    //         {
-    //             scoreManager.UpdateScoreUI();
-    //             scoreManager.AnimateScoreChange();
-    //         }
-    //
-    //         // Make Gems explode
-    //         yield return StartCoroutine(ExplodeGems(matches, UpdateScoreUIAction));
-    //         // Make gems fall
-    //         yield return StartCoroutine(MakeGemsFall());
-    //         // Fill empty spots
-    //         yield return StartCoroutine(FillEmptySpots());
-    //          
-    //         CheckForPossibleCompletion();  
-    //     }
-    //
-    //     DeselectGem();
-    //     IsGameLoopRunning = false;
-    //     yield return null;
-    // }
 
-    IEnumerator StartMatching()
+    void StartPreMatching(Vector2Int selectedGem2)
     {
-        var matches = FindMatches();
+        var preProcessMatchList =
+            // find matches for the swapped two gems
+            new List<Match>();
+        FindMatchesForOneGem(selectedGem2, preProcessMatchList);
+        FindMatchesForOneGem(selectedGem, preProcessMatchList);
+        // if don't create any new matches
+        var noMatchFound = preProcessMatchList.Count == 0;
+        if (noMatchFound)
+        {
+            SetState(GameState.ReverseSwapping, selectedPos: selectedGem2);
+        }
+        else
+        {
+            SetState(GameState.Matching, preMatchingList: preProcessMatchList);
+        }
+        
+    }
+
+    IEnumerator StartMatching(List<Match> preProcessMatchList)
+    {
+        var matches = preProcessMatchList ?? FindMatches();
 
         if (matches.Count > 0)
         {
@@ -172,7 +184,8 @@ public class Match3 : MonoBehaviour
         }
         else
         {
-            SetState(GameState.CheckingCompletion);
+            // SetState(GameState.CheckingCompletion);
+            SetState(GameState.Idle);
         }
     }
     
@@ -181,9 +194,9 @@ public class Match3 : MonoBehaviour
         for (var x = 0; x < config.boardWidth; x++) {
             for (var y = 0; y < config.boardWidth; y++) {
                 if (grid.GetValue(x, y) == null) {
-                    CreateGem(x, y, config.availableGemTypes, config.availableSpecialGemTypes);
+                    CreateGem(x, y);
                     //audioManager.PlayPop();
-                    yield return new WaitForSeconds(0.1f);;
+                    yield return new WaitForSeconds(0.05f);
                 }
             }
         }
@@ -197,7 +210,7 @@ public class Match3 : MonoBehaviour
         for (var x = 0; x < config.boardWidth; x++) {
             for (var y = 0; y < config.boardHeight; y++) {
                 if (grid.GetValue(x, y) == null) {
-                    Debug.Log($"({x}, {y}) is empty ---------------");
+                    // Debug.Log($"({x}, {y}) is empty ---------------");
                     for (var i = y + 1; i < config.boardHeight; i++) {
                         if (grid.GetValue(x, i) != null) {
                             Debug.Log($"checking ({x}, {i})");
@@ -208,7 +221,7 @@ public class Match3 : MonoBehaviour
                                 .DOLocalMove(grid.GetWorldPositionCenter(x, y), 0.5f)
                                 .SetEase(ease).onComplete = audioManager.PlayWoosh;
                             //audioManager.PlayWoosh();
-                            Debug.Log($"({x}, {y}) is filled by ({x}, {i})-------");
+                            // Debug.Log($"({x}, {y}) is filled by ({x}, {i})-------");
                             yield return new WaitForSeconds(0.1f);
                             break;
                         }
@@ -230,14 +243,14 @@ public class Match3 : MonoBehaviour
                 grid.SetValue(pos.x, pos.y, null);
 
                 ExplodeVFX(pos.x, pos.y);
-                Debug.Log($"vfx locates at ({pos.x}, {pos.y}) is exploded");
+                // Debug.Log($"vfx locates at ({pos.x}, {pos.y}) is exploded");
                 
                 gem.transform.DOPunchScale(Vector3.one * 0.1f, 0.1f, 1, 0.5f).onComplete = audioManager.PlayPop;
 
                 yield return new WaitForSeconds(0.1f);
             
                 Destroy(gem.gameObject, 0.1f);
-                Debug.Log($"Gem locates at ({pos.x}, {pos.y}) is destroyed");
+                // Debug.Log($"Gem locates at ({pos.x}, {pos.y}) is destroyed");
             }
         }
         callback?.Invoke();
@@ -250,90 +263,84 @@ public class Match3 : MonoBehaviour
         Destroy(fx, 5f);
     }
 
-    List<Match> FindMatches()
+    List<Match> FindMatchesForOneGem(Vector2Int gem1, List<Match> matches)
     {
-        List<Match> matches = new();
         var config = ConfigurationManager.Instance.CurrentLevelConfig;
         // Horizontal
-        for (var y = 0; y < config.boardWidth; y++) {
-            int x = 0;
-            while (x < config.boardWidth - 2)
+        int x = 0;
+        while (x < config.boardWidth - 2)
+        {
+            var gemA = grid.GetValue(x, gem1.y);
+            var gemB = grid.GetValue(x + 1, gem1.y);
+            var gemC = grid.GetValue(x + 2, gem1.y);
+
+            if (gemA == null || gemB == null || gemC == null) {
+                x++;
+                continue;
+            }
+
+            if (gemA.GetValue().GemType == gemB.GetValue().GemType && 
+                gemB.GetValue().GemType == gemC.GetValue().GemType)
             {
-                var gemA = grid.GetValue(x, y);
-                var gemB = grid.GetValue(x + 1, y);
-                var gemC = grid.GetValue(x + 2, y);
-
-                if (gemA == null || gemB == null || gemC == null) {
-                    x++;
-                    continue;
-                }
-
-                if (gemA.GetValue().GemType == gemB.GetValue().GemType && 
-                    gemB.GetValue().GemType == gemC.GetValue().GemType)
+                var positions = new List<Vector2Int>
                 {
-                    var positions = new List<Vector2Int>
-                    {
-                        new (x, y), 
-                        new (x + 1, y), 
-                        new (x + 2, y)
-                    };
-                    int xCor = x + 3;
-                    while (xCor < config.boardWidth && grid.GetValue(xCor, y)?.GetValue().GemType == gemA.GetValue().GemType)
-                    {
-                        positions.Add(new Vector2Int(xCor, y));
-                        xCor++;
-                    }
-                    // find special gem
-                    var specialGems = FindSpecialGems(positions);
-                    matches.Add(new Match(positions, specialGems));
-                    x = xCor; // Jump the counter to the end of the current match
-                } else {
-                    x++;
+                    new (x, gem1.y), 
+                    new (x + 1, gem1.y), 
+                    new (x + 2, gem1.y)
+                };
+                int xCor = x + 3;
+                while (xCor < config.boardWidth && grid.GetValue(xCor, gem1.y)?.GetValue().GemType == gemA.GetValue().GemType)
+                {
+                    positions.Add(new Vector2Int(xCor, gem1.y));
+                    xCor++;
                 }
+                // find special gem
+                var specialGems = FindSpecialGems(positions);
+                matches.Add(new Match(positions, specialGems, gemA.GetValue().BasePoint));
+                x = xCor; // Jump the counter to the end of the current match
+            } else {
+                x++;
             }
         }
-        
+    
         // Vertical
-        for (var x = 0; x < config.boardWidth; x++)
-        {
-            int y = 0;
-            while (y < config.boardHeight - 2) {
-                var gemA = grid.GetValue(x, y);
-                var gemB = grid.GetValue(x, y + 1);
-                var gemC = grid.GetValue(x, y + 2);
+        int y = 0;
+        while (y < config.boardHeight - 2) {
+            var gemA = grid.GetValue(gem1.x, y);
+            var gemB = grid.GetValue(gem1.x, y + 1);
+            var gemC = grid.GetValue(gem1.x, y + 2);
 
-                if (gemA == null || gemB == null || gemC == null)
-                {
-                    y++;
-                    continue;
-                }
+            if (gemA == null || gemB == null || gemC == null)
+            {
+                y++;
+                continue;
+            }
 
-                if (gemA.GetValue().GemType == gemB.GetValue().GemType 
-                    && gemB.GetValue().GemType == gemC.GetValue().GemType) {
-                    var positions = new List<Vector2Int>
-                    {
-                        new (x,y),
-                        new (x,y+1),
-                        new (x,y+2)
-                    };
-        
-                    var yCor = y + 3;
-                    while (yCor < config.boardHeight && grid.GetValue(x, yCor)?.GetValue().GemType == gemA.GetValue().GemType)
-                    {
-                        positions.Add(new Vector2Int(x, yCor));
-                        yCor++;
-                    }
-                    
-                    // find special gem
-                    // todo: optimization, if no special gem, then no need to new a dictionary for special gems
-                    var specialGems = FindSpecialGems(positions);
-                    matches.Add(new Match(positions, specialGems));
-                    y = yCor;
-                }
-                else
+            if (gemA.GetValue().GemType == gemB.GetValue().GemType 
+                && gemB.GetValue().GemType == gemC.GetValue().GemType) {
+                var positions = new List<Vector2Int>
                 {
-                    y++;
+                    new (gem1.x,y),
+                    new (gem1.x,y+1),
+                    new (gem1.x,y+2)
+                };
+    
+                var yCor = y + 3;
+                while (yCor < config.boardHeight && grid.GetValue(gem1.x, yCor)?.GetValue().GemType == gemA.GetValue().GemType)
+                {
+                    positions.Add(new Vector2Int(gem1.x, yCor));
+                    yCor++;
                 }
+                
+                // find special gem
+                // todo: optimization, if no special gem, then no need to new a dictionary for special gems
+                var specialGems = FindSpecialGems(positions);
+                matches.Add(new Match(positions, specialGems, gemA.GetValue().BasePoint));
+                y = yCor;
+            }
+            else
+            {
+                y++;
             }
         }
 
@@ -343,6 +350,22 @@ public class Match3 : MonoBehaviour
             audioManager.PlayMatch();
         }
             
+        return matches;
+    }
+
+    List<Match> FindMatches()
+    {
+        List<Match> matches = new();
+        var config = ConfigurationManager.Instance.CurrentLevelConfig;
+        // Horizontal
+        for (var y = 0; y < config.boardWidth; y++) {
+            // Vertical
+            for (var x = 0; x < config.boardWidth; x++)
+            {
+                FindMatchesForOneGem(new Vector2Int(x, y), matches);
+            }
+        }
+
         return matches;
     }
 
@@ -371,7 +394,7 @@ public class Match3 : MonoBehaviour
         return specialGemDictionary;
     }
     
-    void SwapGems(Vector2Int gridPosA, Vector2Int gridPosB) {
+    void SwapGems(Vector2Int gridPosA, Vector2Int gridPosB, bool isReverseSwap = false) {
         var gridObjectA = grid.GetValue(gridPosA.x, gridPosA.y);
         var gridObjectB = grid.GetValue(gridPosB.x, gridPosB.y);
 
@@ -386,7 +409,14 @@ public class Match3 : MonoBehaviour
                 grid.SetValue(gridPosA.x, gridPosA.y, gridObjectB);
                 grid.SetValue(gridPosB.x, gridPosB.y, gridObjectA);
 
-                SetState(GameState.Matching);
+                if (isReverseSwap)
+                {
+                    SetState(GameState.Idle);
+                }
+                else
+                {
+                    SetState(GameState.PreMatching, gridPosB);
+                }
             });
         
     }
@@ -394,7 +424,7 @@ public class Match3 : MonoBehaviour
     void InitializeGrid(LevelConfig config) {
         for (var x = 0; x < config.boardWidth; x++) {
             for (var y = 0; y < config.boardHeight; y++) {
-                CreateGem(x, y, config.availableGemTypes, config.availableSpecialGemTypes);
+                CreateGem(x, y);
             }
         }
         
@@ -433,12 +463,14 @@ public class Match3 : MonoBehaviour
         ClearGrid();
         grid = GridSystem2D<GridObject<Gem>>.VerticalGrid(config.boardWidth, config.boardHeight, cellSize, originPosition, debug);
         InitializeGrid(config);
-        SetState(GameState.Idle);
+        // SetState(GameState.Idle);
+        SetState(GameState.Matching);
     }
 
-    void CreateGem(int x, int y, GemType[] thisLevelGemTypes, SpecialGemType[] thisLevelSpecialGemTypes) {
-        var gem = Instantiate(gemPrefab, grid.GetWorldPositionCenter(x, y), Quaternion.identity, transform);
-        gem.SetType(thisLevelGemTypes[Random.Range(0, thisLevelGemTypes.Length)], thisLevelSpecialGemTypes[Random.Range(0, thisLevelSpecialGemTypes.Length)]);
+    void CreateGem(int x, int y)
+    {
+        var gem = gemGenerator.CreateGem(gemPrefab, grid, x, y);
+        gem = gemGenerator.GenerateGems(gem, ConfigurationManager.Instance.CurrentLevelConfig);
         var gridObject = new GridObject<Gem>(grid, x, y);
         gridObject.SetValue(gem);
         grid.SetValue(x, y, gridObject);
@@ -457,4 +489,18 @@ public class Match3 : MonoBehaviour
         }
         return gridPosition.x >= 0 && gridPosition.x < config.boardWidth && gridPosition.y >= 0 && gridPosition.y < config.boardWidth;
     }
+
+    private bool IsAdjacentPosition(Vector2Int pos1, Vector2Int pos2)
+    {
+        if ((pos1.x == pos2.x && pos1.y == pos2.y + 1) ||
+            (pos1.x == pos2.x && pos1.y == pos2.y - 1) ||
+            (pos1.x == pos2.x + 1 && pos1.y == pos2.y) ||
+            (pos1.x == pos2.x - 1 && pos1.y == pos2.y) )
+        {
+            return true;
+        }
+
+        return false;
+    }
+    
 }

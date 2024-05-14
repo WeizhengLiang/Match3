@@ -1,4 +1,3 @@
-using Script.Data;
 using UnityEngine;
 
 public class ConfigurationManager : MonoBehaviour

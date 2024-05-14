@@ -9,9 +9,11 @@ using UnityEngine;
 public class ScoreManager : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _scoreText;
+    [SerializeField] private TextMeshProUGUI _latestMatchScoreText;
     private int _pointsPerGem = 1;
     private int _bonusMultiplier = 2;
     public int CurrentScore { get; private set; }
+    public int LastMatchScore { get; private set; }
 
     public void UpdateScore(List<Match> matches)
     {
@@ -23,12 +25,14 @@ public class ScoreManager : MonoBehaviour
     // add score
     public void UpdateScoreValue(List<Match> matches)
     {
-        CurrentScore += CalculatePoint(matches);
+        LastMatchScore = CalculatePoint(matches);
+        CurrentScore += LastMatchScore;
     }
     // update score UI
     public void UpdateScoreUI()
     {
-        _scoreText.text = $"score: {CurrentScore.ToString()}/{ConfigurationManager.Instance.CurrentLevelConfig.scoreToAchieve}";
+        _scoreText.text = $"total score: {CurrentScore.ToString()}/{ConfigurationManager.Instance.CurrentLevelConfig.scoreToAchieve}";
+        _latestMatchScoreText.text = $"last score: {LastMatchScore.ToString()}";
     }
     // animate UI changes
     public void AnimateScoreChange()
@@ -39,6 +43,7 @@ public class ScoreManager : MonoBehaviour
     public void ResetScore()
     {
         CurrentScore = 0;
+        LastMatchScore = 0;
     }
 
     private int CalculatePoint(List<Match> matches)
@@ -47,7 +52,7 @@ public class ScoreManager : MonoBehaviour
         foreach (var match in matches)
         {
             var basicPoints = CalculateBasicPoints(match);
-            //var comboPoints = CalculatePoints4Combo(match);
+            var comboPoints = CalculatePoints4Combo(match);
             pointEarn += basicPoints;
         }
 
@@ -56,15 +61,15 @@ public class ScoreManager : MonoBehaviour
 
     private int CalculateBasicPoints(Match match)
     {
-        
-        return match.MatchCount;
+        var gemBasePoint = match.GemTypeBasePoint;
+        return match.MatchCount * gemBasePoint;
     }
 
-    private int CalculatePoints4Combo(Match match, int basicPoint)
+    private int CalculatePoints4Combo(Match match)
     {
         // todo: finish the combo bonus calculation
         var points4Combo = 0;
-        var basePoint = basicPoint;
+        var basePoint = match.GemTypeBasePoint;
 
         foreach (var specialEffect in match.SpecialEffects)
         {
