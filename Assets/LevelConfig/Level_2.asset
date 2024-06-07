@@ -9,26 +9,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1d9c7dda9cb431c950a9f57fb299581, type: 3}
+  m_Script: {fileID: 11500000, guid: 005238b51568429582b27a0762902221, type: 3}
   m_Name: Level_2
   m_EditorClassIdentifier: 
-  levelNumber: 2
-  scoreToAchieve: 200
-  boardWidth: 5
-  boardHeight: 5
-  timeLimit: 0
-  useSpecialGems: 0
-  availableGemTypeFrequencies:
+  LevelNumber: 2
+  ScoreToAchieve: 300
+  BoardWidth: 5
+  BoardHeight: 5
+  CellSize: 1
+  Origin: {x: 0, y: 0, z: 0}
+  TimeLimit: 0
+  UseSpecialGems: 0
+  AvailableGemTypeFrequencies:
   - GemType: {fileID: 11400000, guid: 202354221d3104c83a44bb90fe6bcb28, type: 2}
-    weight: 1
+    Weight: 1
   - GemType: {fileID: 11400000, guid: e1ba3e15dc1c844398453cb7223727b0, type: 2}
-    weight: 1
-  availableSpecialGemTypeFrequencies:
-  - SpecialGemType: 0
-    weight: 0
+    Weight: 1
+  - GemType: {fileID: 11400000, guid: b3221ab1c9a2a4263aa62914b22d1c2d, type: 2}
+    Weight: 1
+  - GemType: {fileID: 11400000, guid: 648f8313230b743e58dd50d0cd85ebc5, type: 2}
+    Weight: 1
+  AvailableSpecialGemTypeFrequencies: []
   GemBaseScoreRange:
     Min: 1
-    Max: 2
+    Max: 5
   SpecialEffectStrengthRange:
-    Min: 1
-    Max: 2
+    Min: 0
+    Max: 0

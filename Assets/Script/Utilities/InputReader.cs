@@ -1,4 +1,3 @@
-
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -6,30 +5,34 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PlayerInput))]
 public class InputReader : MonoBehaviour
 {
-    PlayerInput playerInput;
-    InputAction selectAction;
-    InputAction fireAction;
-    
-    // NOTE: Make sure to set the Player Input component to fire C# events
-    public event Action Fire;
-    
-    public Vector2 Selected => selectAction.ReadValue<Vector2>();
-    
-    void Start() {
+    private PlayerInput playerInput;
+    private InputAction selectAction;
+    private InputAction fireAction;
+
+    // Ensure the Player Input component is set to fire C# events
+    public event Action OnFire;
+
+    // Property to get the selected position from input
+    public Vector2 SelectedPosition => selectAction.ReadValue<Vector2>();
+
+    void Start()
+    {
         playerInput = GetComponent<PlayerInput>();
         selectAction = playerInput.actions["Select"];
         fireAction = playerInput.actions["Fire"];
-            
-        fireAction.performed += OnFire;
-    }
-        
-    void OnDestroy() {
-        fireAction.performed -= OnFire;
+
+        fireAction.performed += HandleFireAction;
     }
 
-    void OnFire(InputAction.CallbackContext obj)
+    void OnDestroy()
+    {
+        fireAction.performed -= HandleFireAction;
+    }
+
+    // Handler for the fire action
+    private void HandleFireAction(InputAction.CallbackContext context)
     {
         Debug.Log("Fire action performed");
-        Fire?.Invoke();
+        OnFire?.Invoke();
     }
 }

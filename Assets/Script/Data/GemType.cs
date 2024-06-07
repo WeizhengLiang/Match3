@@ -4,4 +4,5 @@ using UnityEngine;
 public class GemType : ScriptableObject
 {
     public Sprite Sprite;
+    public string ColorType;
 }
